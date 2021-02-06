@@ -22,9 +22,9 @@ Github Username:
 """
 import unittest
 
-name = ""  # TODO: your name
-SID = 000000000  # TODO: your student id
-git_username = ""  # TODO: your github username
+name = "Gerardo Ochoa"  # TODO: your name
+SID = 918631875  # TODO: your student id
+git_username = "shadow6188"  # TODO: your github username
 print(name)
 print(SID)
 print(git_username)
@@ -48,7 +48,11 @@ def product_or_sum(value1, value2, threshold=100):
     """
     result = 0
     # TODO: your code here
-    return result
+    result = value1 * value2
+    if result <= threshold:
+        return result
+    else:
+        return value1 + value2
 
 
 ########################## Problem 2: String Processing ##############################################################
@@ -68,7 +72,7 @@ def str_times_found(str_to_find, original_str):
     """
     result = 0
     # TODO: your code here
-    return result
+    return original_str.count(str_to_find)
 
 
 ########################## Problem 3: Loops ############################################################################
@@ -86,6 +90,9 @@ def summation(list_of_integers):
     """
     result = []
     # TODO: your code here
+    result.append(list_of_integers[0])
+    for i in range(len(list_of_integers) - 1):
+        result.append(list_of_integers[i] + list_of_integers[i + 1])
     return result
 
 
@@ -106,6 +113,8 @@ def merge_odds(list1, list2):
     """
     odds = []
     # TODO: your code here
+    odds = [i for i in list1 + list2 if i % 2 != 0]
+    odds.sort()
     return odds
 
 
@@ -126,7 +135,15 @@ def merge_odds_with_keys(list1, list2):
     """
     odds = {}
     # TODO: your code here
-    return odds
+    for i in range(max(len(list1), len(list2))):
+        odds[i] = []
+    for i in range(len(list1)):
+        if list1[i] % 2 != 0:
+            odds.get(i).append(list1[i])
+    for i in range(len(list2)):
+        if list2[i] % 2 != 0:
+            odds.get(i).append(list2[i])
+    return {x: y for (x, y) in odds.items() if y}
 
 
 ######################## Unit Tests (Do not modify) ##################################################################
