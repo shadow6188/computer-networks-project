@@ -24,9 +24,9 @@ Name: Jose
 SID: 91744100
 Github Username: joseortizcostadev
 """
-name = "" # TODO: your name
-SID = 000000000 # TODO: your student id
-git_username = "" # TODO: your github username
+name = "Gerardo Ochoa"  # TODO: your name
+SID = 918631875  # TODO: your student id
+git_username = "shadow6188"  # TODO: your github username
 print(name)
 print(SID)
 print(git_username)
@@ -43,6 +43,8 @@ class Employee (object):
         :param department:
         """
         # TODO: create two local instance attributes and set them to the assigned parameters.
+        self.name = name
+        self.department = department
 
 
     def info(self):
@@ -51,7 +53,7 @@ class Employee (object):
         :return: "<employee name> works in the <department name> department"
                  i.e Sarah works in the Engineering department
         """
-        return None 
+        return f'{self.name} works in the {self.department} department'
 
 
 
@@ -76,7 +78,7 @@ class Department(object):
         :return: VOID
         """
         # TODO: implement your code here
-        pass
+        self.name = name
 
     def add_employee(self, employee_name):
         """
@@ -86,7 +88,7 @@ class Department(object):
         """
         # TODO: create a employee object
         # TODO: add the employee object to the self.employees list.
-        pass
+        self.employees.append(Employee(employee_name, self.name))
 
     def list_of_employees(self):
         """
@@ -94,7 +96,7 @@ class Department(object):
         :return: the list of employees working in this department.
         """
         # TODO: return the self.employee list
-        return None
+        return self.employees
 
 
 print('\n')
@@ -118,7 +120,7 @@ class Manager(Employee):
         :return: <info from employee> " with manager id: " <manager id>
                  i.e Sarah works in the Engineering department with manager id: 2345"
         """
-        return None
+        return f"{self.info()} with manager id: {self.managerID}"
 
 
 
