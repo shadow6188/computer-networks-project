@@ -1,11 +1,11 @@
 ########################################################################################################################
 # Class: Computer Networks
-# Date: 02/03/2020
+# Date: 02/03/2021
 # Lab3: TCP Client Socket
 # Goal: Learning Networking in Python with TCP sockets
-# Student Name:
-# Student ID:
-# Student Github Username:
+# Student Name: Gerardo Ochoa
+# Student ID: 918631875
+# Student Github Username: shadow6188
 # Instructions: Read each problem carefully, and implement them correctly.
 ########################################################################################################################
 
@@ -36,7 +36,12 @@ class Client(object):
         :server_ip_address: the know ip address of the server
         :server_port: the port of the server
         """
-        pass  # delete this line after implementation
+        try:
+            self.client.connect((server_ip_address, server_port))
+            f"connection to {server_ip_address} port{server_port} was established"
+        except:
+            print("Something went wrong")
+        # pass  # delete this line after implementation
 
     def bind(self, client_ip='', client_port=12000):
         """
@@ -54,6 +59,8 @@ class Client(object):
         :param data: the raw data to serialize (note that data can be in any format.... string, int, object....)
         :return: VOID
         """
+        data_serialized = pickle.dumps(data)
+
         pass  # delete this line after implementation
 
     def receive(self, max_alloc_buffer=4090):
