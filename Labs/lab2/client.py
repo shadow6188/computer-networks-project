@@ -12,6 +12,8 @@
 # don't modify this imports.
 import socket
 import pickle
+from dataclasses import asdict
+
 from clienthelper import ClientHelper
 
 ######################################## Client Socket ###############################################################3
@@ -28,6 +30,7 @@ class Client(object):
         """
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.id = 0
+        self.helper = None
 
     def connect(self, server_ip_address, server_port):
         """
@@ -38,10 +41,13 @@ class Client(object):
         """
         try:
             self.client.connect((server_ip_address, server_port))
-            f"connection to {server_ip_address} port{server_port} was established"
-        except:
-            print("Something went wrong")
-        # pass  # delete this line after implementation
+            connected = self.receive()
+            self.id = connected['clientid']
+            print(f"{connected} has successfully connected to {server_ip_address}/{server_port}")
+            self.client_helper()
+
+        except socket.timeout:
+            print("Server not found")
 
     def bind(self, client_ip='', client_port=12000):
         """
@@ -60,8 +66,7 @@ class Client(object):
         :return: VOID
         """
         data_serialized = pickle.dumps(data)
-
-        pass  # delete this line after implementation
+        self.client.send(data_serialized)
 
     def receive(self, max_alloc_buffer=4090):
         """
@@ -69,22 +74,24 @@ class Client(object):
         :param max_alloc_buffer: Max allowed allocated memory for this data
         :return: the deserialized data.
         """
-        deserialized_data = None
-        return deserialized_data
 
+        raw_data = self.client.recv(max_alloc_buffer)
+        deserialized_data = pickle.loads(raw_data)
+        return deserialized_data
 
     def client_helper(self):
         """
         TODO: create an object of the client helper and start it.
         """
-        pass  # delete this line after implementation
+        self.helper = ClientHelper(self)
+        self.helper.start()
 
     def close(self):
         """
         TODO: close this client
         :return: VOID
         """
-        pass  # delete this line after implementation
+        self.client.close()
 
 
 # main code to run client
@@ -92,4 +99,4 @@ if __name__ == '__main__':
     server_ip = '127.0.0.1'
     server_port = 12000
     client = Client()
-    client.connect(server_ip, server_port) # creates a connection with the server
+    client.connect(server_ip, server_port)  # creates a connection with the server

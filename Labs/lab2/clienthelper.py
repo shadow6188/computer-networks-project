@@ -2,9 +2,9 @@ class ClientHelper:
 
     def __init__(self, client):
         self.client = client
-        student_name = ''  # TODO: your name
-        student_id = 0  # TODO: your student id
-        github_username = ''  # TODO: your github username
+        self.student_name = 'Gerardo Ochoa'  # TODO: your name
+        self.student_id = 918631875  # TODO: your student id
+        self.github_username = 'shadow6188'  # TODO: your github username
 
     def create_request(self, name, id, github_username):
         """
@@ -13,7 +13,7 @@ class ClientHelper:
               'sid'.
         :return: the request created
         """
-        request = None
+        request = {'student_name': name, 'github_username': github_username, 'sid': id}
         return request
 
     def send_request(self, request):
@@ -21,7 +21,7 @@ class ClientHelper:
         TODO: send the request passed as a parameter
         :request: a request representing data deserialized data.
         """
-        pass  # remove this line after the method is implemented
+        self.client.send(request)
 
     def process_response(self):
         """
@@ -29,11 +29,15 @@ class ClientHelper:
               Note the response must be received and deserialized before being processed.
         :response: the serialized response.
         """
-        pass  # remove this line after the method is implemented
+        response = self.client.receive()
+        if response == 1:
+            print("acknowledgement")  # server acknowledgement that data was received
+
 
     def start(self):
         """
         TODO: create a request with your student info using the self.request(....) method
               send the request to the server, and then process the response sent from the server.
         """
-        pass  # remove this line after the method is implemented
+        self.send_request(self.create_request(self.student_name,self.student_id,self.github_username))
+        self.process_response()
