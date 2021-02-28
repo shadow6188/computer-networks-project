@@ -2,9 +2,9 @@
 # Class: CSC645-01 Computer Networks SFSU
 # Lab3: TCP Server Socket
 # Goal: Learning Networking in Python with TCP sockets
-# Student Name:
-# Student ID:
-# Student Github Username:
+# Student Name: Gerardo Ochoa
+# Student ID: 918631875
+# Student Github Username:shadow6188
 # Program Running instructions: python3 server.py # compatible with python version 3
 #
 ########################################################################################################################
@@ -33,7 +33,10 @@ class Server(object):
         """
         self.host = host
         self.port = port
-        self.server = None  # TODO: create the server socket
+        try:
+            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # TODO: create the server socket
+        except socket.socket:
+            print('problem')
         # self.handlers = {}  # ignore this for this lab. It will be used in lab 4
 
     def _bind(self):
@@ -41,7 +44,8 @@ class Server(object):
         # TODO: bind host and port to this server socket
         :return: VOID
         """
-        pass  # remove this line after implemented.
+        self.server.bind((self.host, self.port))
+        #pass  # remove this line after implemented.
 
     def _listen(self):
         """
@@ -49,7 +53,11 @@ class Server(object):
         # TODO: if successful, print the message "Server listening at ip/port"
         :return: VOID
         """
-        pass  # remove this line after implemented.
+        self.server.listen()
+        print(f'Server listening at {self.host}/{self.port}')
+
+
+        #pass  # remove this line after implemented.
 
     def _accept_clients(self):
         """
@@ -62,7 +70,12 @@ class Server(object):
                the student info after processing the data
         :return: VOID
         """
-        pass  # remove this line after implemented.
+        print('1')
+        client_handler, address = self.server.accept()
+        while client_handler:
+            print('2')
+            self._sendID(client_handler, address)
+            print('3')
 
     def _sendID(self, clienthandler, clientid):
         """
@@ -70,7 +83,9 @@ class Server(object):
         :clienthandler: the handler created by the server for the client
         :clientid: an integer representing the client id assigned to the client
         """
-        pass  # remove this line after implemented.
+        client_id = {'clientid': clientid}
+        serialized_data = pickle.dumps(client_id)
+        clienthandler.send(serialized_data)
 
     def _process_request(self, clienthandler, request):
         """
