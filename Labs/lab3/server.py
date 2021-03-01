@@ -45,7 +45,6 @@ class Server(object):
         :return: VOID
         """
         self.server.bind((self.host, self.port))
-        #pass  # remove this line after implemented.
 
     def _listen(self):
         """
@@ -53,6 +52,7 @@ class Server(object):
         # TODO: if successful, print the message "Server listening at ip/port"
         :return: VOID
         """
+        self._bind()
         self.server.listen()
         print(f'Server listening at {self.host}/{self.port}')
 
@@ -70,12 +70,17 @@ class Server(object):
                the student info after processing the data
         :return: VOID
         """
-        print('1')
         client_handler, address = self.server.accept()
-        while client_handler:
-            print('2')
+        with client_handler:
             self._sendID(client_handler, address)
-            print('3')
+            while True:
+                raw = client_handler.recv(1024)
+                if not raw:
+                    break
+                data = pickle.loads(raw)
+                self._process_request(client_handler, data)
+
+
 
     def _sendID(self, clienthandler, clientid):
         """
@@ -96,7 +101,9 @@ class Server(object):
         :clienthandler: the handler created by the server after accepting the client
         :request: the request from the client. It must be already deserialized.
         """
-        pass  # remove this line after implemented.
+        print(f'Connected: Student {request["student_name"]}, Github Username:'
+              f' {request["github_username"]}, sid: {request["sid"]}')
+        clienthandler.send(pickle.dumps(1))
 
     def run(self):
         """
