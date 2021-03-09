@@ -20,22 +20,24 @@ class Server(object):
         """
         self.host = host
         self.port = port
-        self.server = None  # your implementation for this socket here
-        self.handlers = {}  # initializes client_handlers list
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # your implementation for this socket here
+        self.handlers = []  # initializes client_handlers list
 
     def _bind(self):
         """
         TODO: copy and paste your implementation from lab 3
         :return: VOID
         """
-        pass  # remove this line after implemented.
+        self.server.bind((self.host, self.port))
 
     def _listen(self):
         """
         TODO: copy and paste your implementation from lab 3
         :return: VOID
         """
-        pass  # remove this line after implemented.
+        self._bind()
+        self.server.listen(self.MAX_NUM_CONN)
+        print(f'Server listening at {self.host}/{self.port}')
 
     def _accept_clients(self):
         """
@@ -44,25 +46,9 @@ class Server(object):
                HINT: you must thread the handler(...) method
         :return: VOID
         """
-        pass  # remove this line after implemented.
-
-    def _sendID(self, clienthandler, clientid):
-        """
-        TODO: delete this method. It is not needed anymore on the Server class
-              because the client handler object is the one that will send the
-              client id to the client.
-        :clienthandler: the handler created by the server for the client
-        :clientid: an integer representing the client id assigned to the client
-        """
-        pass  # remove this line after implemented.
-
-    def _process_request(self, clienthandler, request):
-        """
-        TODO: delete this method. This work will be done by the client handler object
-        :clienthandler: the handler created by the server after accepting the client
-        :request: the request from the client. It must be already deserialized.
-        """
-        pass  # remove this line after implemented.
+        while True:
+            client_handler, address = self.server.accept()
+            Thread(target=self._handler, args=(client_handler, address)).start()
 
     def _handler(self, clienthandler, addr):
         """
@@ -77,7 +63,9 @@ class Server(object):
         :clienthandler: the clienthandler child process that the server creates when a client is accepted
         :addr: the addr list of server parameters created by the server when a client is accepted.
         """
-        pass  # remove this line after this method is implemented
+        self.handlers.append(ClientHandler(self, clienthandler, addr).run())
+        #print(f'new thread running')
+
 
     def run(self):
         """

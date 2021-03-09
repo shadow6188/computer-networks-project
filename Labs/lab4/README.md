@@ -127,7 +127,7 @@ def accept_clients():
     while True:
         clienthandler, addr = serversocket.accept() 
         # create new client thread. 
-        Thread(target=handler, args=(clienthandler, addr)).start() 
+        **Thread(target=handler, args=(clienthandler, addr)).start()** 
 ```
 
 ### Dealing with race conditions. 
@@ -143,7 +143,7 @@ your server
 import threading
 write_lock = threading.Lock() # creates the lock
 
-# lock adquired only client1 can write in memory allocation
+# lock acquired only client1 can write in memory allocation
 write_lock.acquire() 
 # clienthandler1 writes in the memory allocation
 write_lock.release() # lock is released

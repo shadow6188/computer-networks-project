@@ -57,8 +57,6 @@ class Server(object):
         print(f'Server listening at {self.host}/{self.port}')
 
 
-        #pass  # remove this line after implemented.
-
     def _accept_clients(self):
         """
         #TODO: accept clients when they connect, and creates the client handler

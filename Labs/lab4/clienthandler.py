@@ -3,15 +3,15 @@
 # Date: 02/03/2020
 # Lab3: Server support for multiple clients
 # Goal: Learning Networking in Python with TCP sockets
-# Student Name:
-# Student ID:
-# Student Github Username:
+# Student Name:Gerardo Ochoa
+# Student ID: 918631975
+# Student Github Username: shadow6188
 # Lab Instructions: No partial credit will be given. Labs must be completed in class, and must be committed to your
 #               personal repository by 9:45 pm.
 # Running instructions: This program needs the server to run. The server creates an object of this class.
 #
 ########################################################################################################################
-
+import socket
 import threading
 import pickle
 
@@ -44,7 +44,12 @@ class ClientHandler:
               Recall that you must break the loop when the request received is empty.
         :return: VOID
         """
-        pass  # remove this line after this method is implemented.
+        while True:
+            raw = self.handler.recv(1024)
+            if not raw:
+                break
+            request = pickle.loads(raw)
+            self.process_request(request)
 
     def process_request(self, request):
         """
@@ -55,13 +60,17 @@ class ClientHandler:
         :request: the request received from the client. Note that this must be already deserialized
         :return: VOID
         """
-        pass  # remove this line after this method is implemented.
+
+        self.log(f'Connected: Student {request["student_name"]}, Github Username:'
+                 f' {request["github_username"]}, sid: {request["sid"]}')
+        self.handler.send(pickle.dumps(1))
 
     def send(self, data):
         """
         TODO: serializes data with pickle, and then send the serialized data
         """
-        pass  # remove this line after this method is implemented.
+        serialized = pickle.dumps(data)
+        self.handler.send(serialized)
 
     def receive(self, max_mem_alloc=4096):
         """
@@ -70,14 +79,16 @@ class ClientHandler:
                         for the data that is about to be received. By default is set to 4096 bytes
         :return: the deserialized data
         """
-        deserialized_data = None
+        deserialized_data = pickle.loads(self.handler.recieve(max_mem_alloc))
         return deserialized_data
 
     def sendID(self, clientid):
         """
         TODO: send the client id to the client
         """
-        pass  # remove this line after this method is implemented.
+        client_id = {'clientid': clientid}
+        serialized_data = pickle.dumps(client_id)
+        self.handler.send(serialized_data)
 
     def log(self, message):
         """
@@ -85,7 +96,9 @@ class ClientHandler:
               note that before calling the print statement you must acquire a print lock
               the print lock must be released after the print statement.
         """
-        pass  # remove this line after this method is implemented.
+        self.print_lock.acquire()
+        print(message)
+        self.print_lock.release()
 
     def run(self):
         """
