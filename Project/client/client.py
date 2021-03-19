@@ -14,12 +14,19 @@ import socket
 import pickle
 from dataclasses import asdict
 
-from clienthelper import ClientHelper
+from client_helper import ClientHelper
+import argparse
 
 ######################################## Client Socket ###############################################################3
 """
 Client class that provides functionality to create a client socket is provided. Implement all the methods but bind(..)
 """
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--ip', type=str, help="Ip of server you want to connect to", default='127.0.0.1')
+parser.add_argument('-p', '--port', type=int, help="Port of server you want to connect to", default=12000)
+parser.add_argument('-n', '--name', type=str, help="name of client", required=True)
+args = parser.parse_args()
 
 
 class Client(object):
@@ -29,10 +36,9 @@ class Client(object):
         Class constructor
         """
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.id = 0
         self.helper = None
 
-    def connect(self, server_ip_address, server_port):
+    def connect(self, server_ip_address, server_port, name):
         """
         TODO: Create a connection from client to server
               Note that this method must handle any exceptions
@@ -42,9 +48,8 @@ class Client(object):
         try:
             self.client.connect((server_ip_address, server_port))
             connected = self.receive()
-            self.id = connected['clientid']
-            print(f"{connected} has successfully connected to {server_ip_address}/{server_port}")
-            self.client_helper()
+            print(f"Successfully connected to {server_ip_address}/{server_port}")
+            self.client_helper(connected['clientid'], name)
 
         except socket.timeout:
             print("Server not found")
@@ -68,7 +73,7 @@ class Client(object):
         data_serialized = pickle.dumps(data)
         self.client.send(data_serialized)
 
-    def receive(self, max_alloc_buffer=4090):
+    def receive(self, max_alloc_buffer=4096):
         """
         TODO: Deserializes the data received by the server
         :param max_alloc_buffer: Max allowed allocated memory for this data
@@ -76,14 +81,17 @@ class Client(object):
         """
 
         raw_data = self.client.recv(max_alloc_buffer)
-        deserialized_data = pickle.loads(raw_data)
-        return deserialized_data
+        if raw_data:
+            deserialized_data = pickle.loads(raw_data)
+            return deserialized_data
+        else:
+            return None
 
-    def client_helper(self):
+    def client_helper(self, id, name):
         """
         TODO: create an object of the client helper and start it.
         """
-        self.helper = ClientHelper(self)
+        self.helper = ClientHelper(self, id, name)
         self.helper.start()
 
     def close(self):
@@ -96,8 +104,6 @@ class Client(object):
 
 # main code to run client
 if __name__ == '__main__':
-    server_ip = '127.0.0.1'
-    server_port = 12000
     client = Client()
-    client.connect(server_ip, server_port)  # creates a connection with the server
-
+    print(args.ip, args.port, args.name)
+    client.connect(args.ip, args.port, args.name)  # creates a connection with the server

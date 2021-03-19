@@ -1,7 +1,7 @@
 # don't modify this imports.
 import socket
 from threading import Thread
-from clienthandler import ClientHandler
+from client_handler import ClientHandler
 
 
 class Server(object):
@@ -64,8 +64,6 @@ class Server(object):
         :addr: the addr list of server parameters created by the server when a client is accepted.
         """
         self.handlers.append(ClientHandler(self, clienthandler, addr).run())
-        #print(f'new thread running')
-
 
     def run(self):
         """

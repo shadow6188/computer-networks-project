@@ -16,6 +16,7 @@ import threading
 import pickle
 from collections import defaultdict
 import datetime
+from menu import Menu
 
 
 class ClientHandler:
@@ -34,11 +35,13 @@ class ClientHandler:
         """
         self.server_ip = addr[0]
         self.client_id = addr[1]
+        self.client_name = None
+        self.menu = Menu()
         self.server = server_instance
         self.handler = clienthandler
         self.messages = defaultdict(list)
         self.print_lock = threading.Lock()  # creates the print lock
-        self.sendID(self.client_id)
+        self.send_id(self.client_id)
 
     def process_requests(self):
         """
@@ -48,10 +51,9 @@ class ClientHandler:
         :return: VOID
         """
         while True:
-            raw = self.handler.recv(1024)
-            if not raw:
+            request = self.receive()
+            if not request:
                 break
-            request = pickle.loads(raw)
             self.process_request(request)
 
     def process_request(self, request):
@@ -67,32 +69,28 @@ class ClientHandler:
         # getting the option
         # request = {'payload':blah , 'headers':{}}
 
-        option = request['headers']['option']
+        if 'name' in request:  # check for first request, which is meant to pass name to server from client
+            self.save_name(request['name'])
+            client_info = ["Your client info is:",
+                           f"Client Name: {self.client_name}",
+                           f"Client Id: {self.client_id}"]
+            self.send({'print': client_info})
+            return
 
-        response = {'payload':None , 'headers': {}, 'acknowledge':-1}
+        # delay formulae + ping
 
-        if option == 1:  # get user list
-            response  = self.get_users()
-        elif option == 2: # send a message
-            message = request['payload']
-            recipient = request['headers']['recipient']
-            response['acknowledge'] = self.save_message(self, message, recipient)
-        elif option == 3: # get my messages
-            request['payload'] = self.messages
-            self.messages.clear()
-        elif option == 4: # send a direct message with udp protocol
+    def save_name(self, name):
+        self.client_name = name
+        self.log(f'Client {self.client_id} name set to {self.client_name}')
 
-        elif option == 5: # Broadcast a message with CDMA protocol
-            nothue
-        else:
-            # invalid option
     def get_users(self):
         return self.server.handlers
+
     def save_message(self, message, recipient):
         try:
             recipient = self.server.handlers[recipient]
 
-            recipient.messages[self.client_id].append((datetime.now(), message)) # add messages to recipient list
+            recipient.messages[self.client_id].append((datetime.now(), message))  # add messages to recipient list
         except Exception as err:
             self.log(err)
         return 0
@@ -111,16 +109,20 @@ class ClientHandler:
                         for the data that is about to be received. By default is set to 4096 bytes
         :return: the deserialized data
         """
-        deserialized_data = pickle.loads(self.handler.recieve(max_mem_alloc))
-        return deserialized_data
+        data = self.handler.recv(max_mem_alloc)
+        if data:
+            deserialized_data = pickle.loads(data)
+            return deserialized_data
+        else:
+            return None
 
-    def sendID(self, clientid):
+    def send_id(self, clientid):
         """
         TODO: send the client id to the client
         """
+        self.log(f'Client {clientid} connected')
         client_id = {'clientid': clientid}
-        serialized_data = pickle.dumps(client_id)
-        self.handler.send(serialized_data)
+        self.send(client_id)
 
     def log(self, message):
         """
