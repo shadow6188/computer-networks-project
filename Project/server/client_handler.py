@@ -68,14 +68,34 @@ class ClientHandler:
 
         # getting the option
         # request = {'payload':blah , 'headers':{}}
+        response = {}
 
         if 'name' in request:  # check for first request, which is meant to pass name to server from client
             self.save_name(request['name'])
             client_info = ["Your client info is:",
                            f"Client Name: {self.client_name}",
                            f"Client Id: {self.client_id}"]
-            self.send({'print': client_info})
-            return
+            response.update({'print': client_info, 'acknowledge': 0})
+        elif 'option' in request:
+            print(request['option'])
+            if int(request['option']) == 1:
+                self.log("option 1 chosen by:")
+                response.update({'print': self.get_users(), 'acknowledge': 0})
+            elif request['option'] == 2:
+                print("not implemented")
+            elif request['option'] == 3:
+                print("not implemented")
+            elif request['option'] == 4:
+                print("not implemented")
+            else:
+                print(f'{request["option"]} is an invalid option')
+        else:
+            self.log(f"menu sent to {self.client_name}")
+            """unless other options detected send menu"""
+            response.update({'print': self.menu.get()})
+            response.update({'input': {'option': int}})
+
+        self.send(response)
 
         # delay formulae + ping
 
@@ -83,8 +103,12 @@ class ClientHandler:
         self.client_name = name
         self.log(f'Client {self.client_id} name set to {self.client_name}')
 
-    def get_users(self):
-        return self.server.handlers
+    def get_users(self):  # correctly returning a list with client names with id
+        """ TODO: Make sure disconnected user no longer show up """
+        handlers = ["users connected"]
+        for handler in self.server.handlers:
+            handlers.append(str(handler.client_name) + ':' + str(handler.client_id))
+        return handlers
 
     def save_message(self, message, recipient):
         try:

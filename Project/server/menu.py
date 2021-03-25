@@ -44,8 +44,7 @@ class Menu:
                    "2.  Send a message",
                    "3.  Get my messages",
                    "4.  Send a direct message with UDP protocol",
-                   "5.  Broadcast a message with CDMA protocol",
-                   "Your option :"]
+                   "5.  Broadcast a message with CDMA protocol"]
 
         return options
 

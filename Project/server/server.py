@@ -1,5 +1,7 @@
 # don't modify this imports.
+import signal
 import socket
+import sys
 from threading import Thread
 from client_handler import ClientHandler
 
@@ -50,6 +52,8 @@ class Server(object):
             client_handler, address = self.server.accept()
             Thread(target=self._handler, args=(client_handler, address)).start()
 
+
+
     def _handler(self, clienthandler, addr):
         """
         TODO: create an object of the ClientHandler.
@@ -63,7 +67,9 @@ class Server(object):
         :clienthandler: the clienthandler child process that the server creates when a client is accepted
         :addr: the addr list of server parameters created by the server when a client is accepted.
         """
-        self.handlers.append(ClientHandler(self, clienthandler, addr).run())
+        handler = ClientHandler(self, clienthandler, addr)
+        self.handlers.append(handler)
+        handler.run()
 
     def run(self):
         """
@@ -78,4 +84,8 @@ class Server(object):
 # main execution
 if __name__ == '__main__':
     server = Server()
-    server.run()
+    try:
+        server.run()
+    except KeyboardInterrupt:
+        server.server.close()
+        sys.exit()

@@ -15,7 +15,7 @@ class ClientHelper:
               'sid'.
         :return: the request created
         """
-        request = {'payload': None, 'headers': None}
+        request = {"payload": None}
         return request
 
     def send_request(self, request):
@@ -31,17 +31,29 @@ class ClientHelper:
               Note the response must be received and deserialized before being processed.
         :response: the serialized response.
         """
+        request = {}
+
         try:
             while True:
                 response = self.client.receive()
                 if not response:  # first check if
-                    break
-                print("got response")
-                if 'acknowledge' in response and response['acknowledge'] == 0:  # check if its an acknowledgment
-                    print("acknowledgement")
+                    continue
                 if 'print' in response:
+                    # print works
                     for line in response['print']:
                         print(line)
+                if 'input' in response:
+                    # got input key processed properly
+                    for key in response['input'].keys():
+                        request[key] = input(f"enter an {response['input'][key].__name__} for {key}:")
+
+                if 'acknowledge' in response:  # check if this is a response to request
+                    self.send_request(self.create_request())
+                    continue
+
+                if request.keys():
+                    self.send_request(request)
+                    request = None
 
         except Exception as err:
             print("error is ", err)
@@ -52,6 +64,4 @@ class ClientHelper:
               send the request to the server, and then process the response sent from the server.
         """
         self.send_request({'name': self.name})  # first request passing name to server
-        print(f'Client ID is :{self.id}')
-        self.send_request(self.create_request())
         self.process_response()

@@ -105,5 +105,4 @@ class Client(object):
 # main code to run client
 if __name__ == '__main__':
     client = Client()
-    print(args.ip, args.port, args.name)
     client.connect(args.ip, args.port, args.name)  # creates a connection with the server
