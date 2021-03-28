@@ -42,18 +42,19 @@ class ClientHelper:
                     # print works
                     for line in response['print']:
                         print(line)
+                    print('\n')
                 if 'input' in response:
                     # got input key processed properly
                     for key in response['input'].keys():
-                        request[key] = input(f"enter an {response['input'][key].__name__} for {key}:")
-
+                        # thinking of sending type to check input client side
+                        request[key] = input(response['input'][key])
                 if 'acknowledge' in response:  # check if this is a response to request
                     self.send_request(self.create_request())
                     continue
 
                 if request.keys():
                     self.send_request(request)
-                    request = None
+                    request.clear()
 
         except Exception as err:
             print("error is ", err)

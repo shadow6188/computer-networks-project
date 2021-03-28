@@ -1,8 +1,8 @@
 # don't modify this imports.
-import signal
 import socket
 import sys
 from threading import Thread
+
 from client_handler import ClientHandler
 
 
@@ -51,8 +51,6 @@ class Server(object):
         while True:
             client_handler, address = self.server.accept()
             Thread(target=self._handler, args=(client_handler, address)).start()
-
-
 
     def _handler(self, clienthandler, addr):
         """

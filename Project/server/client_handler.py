@@ -39,35 +39,29 @@ class ClientHandler:
         self.menu = Menu()
         self.server = server_instance
         self.handler = clienthandler
-        self.messages = defaultdict(list)
+        self.messages = {}
         self.print_lock = threading.Lock()  # creates the print lock
         self.send_id(self.client_id)
 
     def process_requests(self):
         """
-        TODO: Create a loop that keeps waiting for client requests.
-              Note that the process_request(...) method is executed inside the loop
-              Recall that you must break the loop when the request received is empty.
+        TODO: process disconnects
         :return: VOID
         """
-        while True:
-            request = self.receive()
-            if not request:
-                break
-            self.process_request(request)
+        try:
+            while True:
+                request = self.receive()
+                if not request:
+                    break
+                self.process_request(request)
+        except ConnectionResetError:
+            self.log(f"connection reset by {self.client_name}")
 
     def process_request(self, request):
         """
-        TODO: This implementation is similar to the one you did in the method process_request(...)
-              that was implemented in the server of lab 3.
-              Note that in this case, the clienthandler is not passed as a parameter in the function
-              because you have a private instance of it in the constructor that can be invoked from this method.
         :request: the request received from the client. Note that this must be already deserialized
         :return: VOID
         """
-
-        # getting the option
-        # request = {'payload':blah , 'headers':{}}
         response = {}
 
         if 'name' in request:  # check for first request, which is meant to pass name to server from client
@@ -76,16 +70,34 @@ class ClientHandler:
                            f"Client Name: {self.client_name}",
                            f"Client Id: {self.client_id}"]
             response.update({'print': client_info, 'acknowledge': 0})
+
+        elif 'message' and 'recipient id' in request:  # processing second half of part 2 (storing message)
+            self.log(f"received message for {request['recipient id']}")
+
+            if self.save_message(request['message'], request['recipient id']):
+                response.update({'print': ["failed to deliver message"]})
+            else:  # message saved successfully
+                response.update({'print': ['message sent']})
+            response.update({'acknowledge': 0})
+
         elif 'option' in request:
-            print(request['option'])
-            if int(request['option']) == 1:
-                self.log("option 1 chosen by:")
+            try:
+                option = int(request['option'])
+            except ValueError:  # option not an integer
+                option = -1
+
+            if option == 1:
+                self.log("option 1 chosen by:" + self.client_name)
                 response.update({'print': self.get_users(), 'acknowledge': 0})
-            elif request['option'] == 2:
-                print("not implemented")
-            elif request['option'] == 3:
-                print("not implemented")
-            elif request['option'] == 4:
+            elif option == 2:
+                self.log("option 2 chosen by:" + self.client_name)
+                response.update({'input': {'message': "Enter your message:",
+                                           'recipient id': "Enter recipient id:"}})
+            elif option == 3:
+                self.log("option 3 chosen by:" + self.client_name)
+                response.update({'print': self.get_messages()})
+
+            elif option == 4:
                 print("not implemented")
             else:
                 print(f'{request["option"]} is an invalid option')
@@ -93,7 +105,7 @@ class ClientHandler:
             self.log(f"menu sent to {self.client_name}")
             """unless other options detected send menu"""
             response.update({'print': self.menu.get()})
-            response.update({'input': {'option': int}})
+            response.update({'input': {'option': "Your option <enter a number>:"}})
 
         self.send(response)
 
@@ -111,24 +123,47 @@ class ClientHandler:
         return handlers
 
     def save_message(self, message, recipient):
-        try:
-            recipient = self.server.handlers[recipient]
+        # print(recipient)
+        recipient = self.get_handler(int(recipient))
 
-            recipient.messages[self.client_id].append((datetime.now(), message))  # add messages to recipient list
-        except Exception as err:
-            self.log(err)
-        return 0
+        if recipient is None:
+            return 1
+        else:
+            if self.client_name not in recipient.messages:
+                recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
+            arrived = datetime.datetime.now()
+            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'), message))
+            return 0
+
+    def get_messages(self):
+        m = []
+        # should be a better way to do this
+        for each in self.messages.keys():
+            for message in self.messages[each]:
+                m.append(f'{message[0]}: {message[1]} (private message from {each})')
+        if not m:
+            return ["No Messages"]
+        else:
+            self.messages.clear()
+            return m
+
+    def get_handler(self, id_num):
+
+        for each in self.server.handlers:
+            if each.client_id == id_num:
+                return each
+        # if not found
+        return None
 
     def send(self, data):
         """
-        TODO: serializes data with pickle, and then send the serialized data
         """
         serialized = pickle.dumps(data)
         self.handler.send(serialized)
 
     def receive(self, max_mem_alloc=4096):
         """
-        TODO: receive the data, deserializes the data received
+        receive the data, deserializes the data received
         :max_mem_alloc: an integer representing the maximum allocation (in bytes) in memory allowed
                         for the data that is about to be received. By default is set to 4096 bytes
         :return: the deserialized data
@@ -142,7 +177,7 @@ class ClientHandler:
 
     def send_id(self, clientid):
         """
-        TODO: send the client id to the client
+        send the client id to the client
         """
         self.log(f'Client {clientid} connected')
         client_id = {'clientid': clientid}
@@ -150,7 +185,7 @@ class ClientHandler:
 
     def log(self, message):
         """
-        TODO: log a message on the server windows.
+        log a message on the server windows.
               note that before calling the print statement you must acquire a print lock
               the print lock must be released after the print statement.
         """
