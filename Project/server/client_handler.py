@@ -16,6 +16,7 @@ import threading
 import pickle
 from collections import defaultdict
 import datetime
+
 from menu import Menu
 
 
@@ -42,7 +43,7 @@ class ClientHandler:
         self.messages = {}
         self.print_lock = threading.Lock()  # creates the print lock
         self.send_id(self.client_id)
-
+        self.done = False
     def process_requests(self):
         """
         TODO: process disconnects
@@ -50,12 +51,15 @@ class ClientHandler:
         """
         try:
             while True:
-                request = self.receive()
-                if not request:
+                if self.done:
                     break
+                request = self.receive()
                 self.process_request(request)
         except ConnectionResetError:
             self.log(f"connection reset by {self.client_name}")
+        except Exception as error:
+            self.log(error)
+
 
     def process_request(self, request):
         """
@@ -63,7 +67,6 @@ class ClientHandler:
         :return: VOID
         """
         response = {}
-
         if 'name' in request:  # check for first request, which is meant to pass name to server from client
             self.save_name(request['name'])
             client_info = ["Your client info is:",
@@ -71,41 +74,22 @@ class ClientHandler:
                            f"Client Id: {self.client_id}"]
             response.update({'print': client_info, 'acknowledge': 0})
 
-        elif 'message' and 'recipient id' in request:  # processing second half of part 2 (storing message)
-            self.log(f"received message for {request['recipient id']}")
-
-            if self.save_message(request['message'], request['recipient id']):
-                response.update({'print': ["failed to deliver message"]})
-            else:  # message saved successfully
-                response.update({'print': ['message sent']})
-            response.update({'acknowledge': 0})
-
         elif 'option' in request:
-            try:
-                option = int(request['option'])
-            except ValueError:  # option not an integer
-                option = -1
+            option = self.menu.option(request['option'])
+            response.update(self.menu.request_headers(self, option))
 
-            if option == 1:
-                self.log("option 1 chosen by:" + self.client_name)
-                response.update({'print': self.get_users(), 'acknowledge': 0})
-            elif option == 2:
-                self.log("option 2 chosen by:" + self.client_name)
-                response.update({'input': {'message': "Enter your message:",
-                                           'recipient id': "Enter recipient id:"}})
-            elif option == 3:
-                self.log("option 3 chosen by:" + self.client_name)
-                response.update({'print': self.get_messages()})
-
-            elif option == 4:
-                print("not implemented")
-            else:
-                print(f'{request["option"]} is an invalid option')
-        else:
+        elif 'menu' in request:  # if no headers then send the menu
             self.log(f"menu sent to {self.client_name}")
-            """unless other options detected send menu"""
             response.update({'print': self.menu.get()})
             response.update({'input': {'option': "Your option <enter a number>:"}})
+
+        elif len(request) > 0:
+            self.log("other options selected")
+            headers = self.menu.response_headers(self, request)
+            response.update(headers)
+        else:
+            self.log("something went wrong with the request")
+
 
         self.send(response)
 
@@ -192,6 +176,11 @@ class ClientHandler:
         self.print_lock.acquire()
         print(message)
         self.print_lock.release()
+
+    def end(self):
+        self.done = True
+        self.server.handlers.remove(self)
+
 
     def run(self):
         """

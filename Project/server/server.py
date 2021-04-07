@@ -85,5 +85,6 @@ if __name__ == '__main__':
     try:
         server.run()
     except KeyboardInterrupt:
+        print("error handled")
         server.server.close()
         sys.exit()
