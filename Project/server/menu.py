@@ -88,6 +88,7 @@ class Menu:
             return {'input': {'message': "Enter your message:"}}
         elif option == 6:
             ClientHandler.log(ClientHandler.client_name + " has disconnected")
+            ClientHandler.send({'exit': 0})
             ClientHandler.end()
             return {'exit': 0}
         else:

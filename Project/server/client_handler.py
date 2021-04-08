@@ -116,7 +116,7 @@ class ClientHandler:
                 recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
             arrived = datetime.datetime.now()
             recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
-                                                         (message + f"private message from {self.client_name}")))
+                                                         (message + f" (private message from {self.client_name})")))
             return 0
 
     def broadcast(self, message):
@@ -125,7 +125,7 @@ class ClientHandler:
                 recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
             arrived = datetime.datetime.now()
             recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
-                                                         (message + f"broadcast message from {self.client_name}")))
+                                                         (message + f" (broadcast message from {self.client_name})")))
 
     def get_messages(self):
         m = []
