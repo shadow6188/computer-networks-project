@@ -85,7 +85,7 @@ class Menu:
             ClientHandler.log("option 4 chosen by:" + ClientHandler.client_name)
             return {"UDP": 0, 'acknowledge': 0}
         elif option == 5:
-            return {'input': {'message': "Enter your message:", 'recipient id': "Enter recipient id:"}}
+            return {'input': {'message': "Enter your message:"}}
         elif option == 6:
             ClientHandler.log(ClientHandler.client_name + " has disconnected")
             ClientHandler.end()

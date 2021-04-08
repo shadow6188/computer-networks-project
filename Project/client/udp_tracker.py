@@ -37,7 +37,7 @@ class Tracker:
         """
         while True:
             data, addr = self.udpSocket.recvfrom(1024)
-            self.helper.log(f'Message: {data} received from {addr}\n')
+            self.helper.log(f'Message: {data.decode()} received from {addr}\n')
 
     def listen(self):
         """

@@ -101,11 +101,11 @@ class ClientHelper:
                     send = check_address(recipient_ip)  # convert address to str int tuple
                     while not send:
                         self.log(f"{recipient_ip} is an invalid address")
-                        recipient_ip = self.read("Enter the address to bind your UDP client (e.g 127.0.0.1:6000): ")
+                        recipient_ip = self.read("Enter the recipient address (e.g 127.0.0.1:6000): ")
                         send = check_address(recipient_ip)
 
                     message = self.read("Enter the message: ")
-                    self.udp.send(bytes(message, 'utf-8'), send)
+                    self.udp.send(message.encode(), send)
 
                     self.log(f"message sent to udp address: {recipient_ip}")
 

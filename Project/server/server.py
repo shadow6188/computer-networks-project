@@ -45,7 +45,7 @@ class Server(object):
         """
         self._bind()
         self.server.listen(self.MAX_NUM_CONN)
-        print(f'Server listening at {self.host}/{self.port}')
+        print(f'Server listening at {socket.gethostbyname(self.host)}/{self.port}')
 
     def _accept_clients(self):
         """
