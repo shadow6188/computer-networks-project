@@ -115,7 +115,8 @@ class ClientHandler:
             if self.client_name not in recipient.messages:
                 recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
             arrived = datetime.datetime.now()
-            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'), message))
+            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
+                                                         (message + f"private message from {self.client_name}")))
             return 0
 
     def broadcast(self, message):
@@ -123,14 +124,15 @@ class ClientHandler:
             if self.client_name not in recipient.messages:
                 recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
             arrived = datetime.datetime.now()
-            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'), message))
+            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
+                                                         (message + f"broadcast message from {self.client_name}")))
 
     def get_messages(self):
         m = []
         # should be a better way to do this
         for each in self.messages.keys():
             for message in self.messages[each]:
-                m.append(f'{message[0]}: {message[1]} (private message from {each})')
+                m.append(f'{message[0]}: {message[1]}')
         if not m:
             return ["No Messages"]
         else:
