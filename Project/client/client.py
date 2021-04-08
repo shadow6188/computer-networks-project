@@ -23,9 +23,9 @@ Client class that provides functionality to create a client socket is provided. 
 """
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--ip', type=str, help="Ip of server you want to connect to", default='127.0.0.1')
-parser.add_argument('-p', '--port', type=int, help="Port of server you want to connect to", default=12000)
-parser.add_argument('-n', '--name', type=str, help="name of client", required=True)
+parser.add_argument('-i', '--ip', type=str, help="Ip of server you want to connect to")
+parser.add_argument('-p', '--port', type=int, help="Port of server you want to connect to")
+parser.add_argument('-n', '--name', type=str, help="name of client")
 args = parser.parse_args()
 
 
@@ -73,6 +73,7 @@ class Client(object):
         data_serialized = pickle.dumps(data)
         self.client.send(data_serialized)
 
+
     def receive(self, max_alloc_buffer=4096):
         """
         TODO: Deserializes the data received by the server
@@ -105,4 +106,10 @@ class Client(object):
 # main code to run client
 if __name__ == '__main__':
     client = Client()
+    if not args.ip:
+        args.ip = input("Enter the server IP Address:")
+    if not args.port:
+        args.port = int(input("Enter the server port:"))
+    if not args.name:
+        args.name = input("Enter a username:")
     client.connect(args.ip, args.port, args.name)  # creates a connection with the server

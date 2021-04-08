@@ -9,6 +9,8 @@
 #
 ########################################################################################
 import client_handler
+
+
 class Menu:
     """
     IMPORTANT MUST READ: The Menu class is the user interface that acts as a communication bridge between the user
@@ -83,15 +85,14 @@ class Menu:
             ClientHandler.log("option 4 chosen by:" + ClientHandler.client_name)
             return {"UDP": 0, 'acknowledge': 0}
         elif option == 5:
-            print("not implemented")
-            return {}
+            return {'input': {'message': "Enter your message:", 'recipient id': "Enter recipient id:"}}
         elif option == 6:
             ClientHandler.log(ClientHandler.client_name + " has disconnected")
             ClientHandler.end()
             return {'exit': 0}
         else:
-            print(f'{option} is an invalid option')
-            return {'acknowledge': 0}
+            # print(f'{option} is an invalid option')
+            return {'print': ['Invalid option was chosen'], 'acknowledge': 0}
 
     @staticmethod
     def response_headers(ClientHandler, request):
@@ -109,3 +110,11 @@ class Menu:
                 return {'print': ["failed to deliver message"]}
             else:  # message saved successfully
                 return {'print': ['message sent'], 'acknowledge': 0}
+            # else if should not go through if first if did
+        elif 'message' in request:  # this is for option 5 broadcast which has no specific target
+            ClientHandler.log(f'Broadcast message from {ClientHandler.client_name} received')
+
+            if ClientHandler.broadcast(request['message']):
+                return {'print': ["failed to deliver message"]}
+            else:
+                return {'print': ['message broadcasted'], 'acknowledge': 0}

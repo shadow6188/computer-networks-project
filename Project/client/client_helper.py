@@ -107,7 +107,7 @@ class ClientHelper:
                     message = self.read("Enter the message: ")
                     self.udp.send(bytes(message, 'utf-8'), send)
 
-                    self.log("message sent")
+                    self.log(f"message sent to udp address: {recipient_ip}")
 
                 if 'acknowledge' in response:  # check if this is a response to request
                     self.send_request(self.create_request())  # after finish sending message request menu again
@@ -123,6 +123,8 @@ class ClientHelper:
 
     def listen_udp(self):
         self.udp.listen()
+
+    """Added lock to client so that udp messages would not be printed out during other print or input operations"""
 
     def log(self, string):
         self.lock.acquire()

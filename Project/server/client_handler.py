@@ -44,6 +44,7 @@ class ClientHandler:
         self.print_lock = threading.Lock()  # creates the print lock
         self.send_id(self.client_id)
         self.done = False
+
     def process_requests(self):
         """
         TODO: process disconnects
@@ -59,7 +60,6 @@ class ClientHandler:
             self.log(f"connection reset by {self.client_name}")
         except Exception as error:
             self.log(error)
-
 
     def process_request(self, request):
         """
@@ -90,7 +90,6 @@ class ClientHandler:
         else:
             self.log("something went wrong with the request")
 
-
         self.send(response)
 
         # delay formulae + ping
@@ -110,7 +109,7 @@ class ClientHandler:
         # print(recipient)
         recipient = self.get_handler(int(recipient))
 
-        if recipient is None:
+        if recipient is None:  # check for valid sender
             return 1
         else:
             if self.client_name not in recipient.messages:
@@ -118,6 +117,13 @@ class ClientHandler:
             arrived = datetime.datetime.now()
             recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'), message))
             return 0
+
+    def broadcast(self, message):
+        for recipient in self.server.handlers:
+            if self.client_name not in recipient.messages:
+                recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
+            arrived = datetime.datetime.now()
+            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'), message))
 
     def get_messages(self):
         m = []
@@ -180,7 +186,6 @@ class ClientHandler:
     def end(self):
         self.done = True
         self.server.handlers.remove(self)
-
 
     def run(self):
         """

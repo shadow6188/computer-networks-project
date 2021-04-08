@@ -1,9 +1,15 @@
 # don't modify this imports.
+import argparse
 import socket
 import sys
 from threading import Thread
 
 from client_handler import ClientHandler
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--ip', type=str, help="Ip of server you want setup ", default='')
+parser.add_argument('-p', '--port', type=int, help="Port you want the server to use", default=12000)
+args = parser.parse_args()
 
 
 class Server(object):
@@ -16,7 +22,7 @@ class Server(object):
     """
     MAX_NUM_CONN = 10  # keeps 10 clients in queue
 
-    def __init__(self, host="127.0.0.1", port=12000):
+    def __init__(self, host, port):
         """
         TODO: copy and paste your implementation from lab 3 for self.server socket property
         """
@@ -81,10 +87,10 @@ class Server(object):
 
 # main execution
 if __name__ == '__main__':
-    server = Server()
+    server = Server(args.ip, args.port)
     try:
         server.run()
     except KeyboardInterrupt:
-        print("error handled")
+        # print("error handled")
         server.server.close()
         sys.exit()
