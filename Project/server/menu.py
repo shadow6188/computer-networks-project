@@ -8,7 +8,7 @@
 # Usage :           menu = Menu() # creates object
 #
 ########################################################################################
-import client_handler
+from Project.shared.PGP import RSA
 
 
 class Menu:
@@ -47,7 +47,10 @@ class Menu:
                    "3.  Get my messages",
                    "4.  Send a direct message with UDP protocol",
                    "5.  Broadcast a message with CDMA protocol",
-                   "6.  Exit"]
+                   "6.  Create a secure channel to chat with your friends",
+                   "7.  Join an existing channel",
+                   "8.  Create a Bot to manage a future channel",
+                   "9.  Exit"]
 
         return options
 
@@ -85,8 +88,19 @@ class Menu:
             ClientHandler.log("option 4 chosen by:" + ClientHandler.client_name)
             return {"UDP": 0, 'acknowledge': 0}
         elif option == 5:
+            ClientHandler.log("option 5 chosen by:" + ClientHandler.client_name)
             return {'input': {'message': "Enter your message:"}}
         elif option == 6:
+            ClientHandler.log("option 6 chosen by:" + ClientHandler.client_name)
+            return {'input': {'channel_id': "choose a channel id:"}}
+        elif option == 7:
+            ClientHandler.log("option 7 chosen by:" + ClientHandler.client_name)
+            return {'input': {'join_id': "enter id of channel to join:"}}
+        elif option == 8:
+            """ todo :  finish this"""
+            return {'acknowledge': 0}
+            #  return bot info
+        elif option == 9:
             ClientHandler.log(ClientHandler.client_name + " has disconnected")
             ClientHandler.send({'exit': 0})
             ClientHandler.end()
@@ -112,6 +126,7 @@ class Menu:
             else:  # message saved successfully
                 return {'print': ['message sent'], 'acknowledge': 0}
             # else if should not go through if first if did
+
         elif 'message' in request:  # this is for option 5 broadcast which has no specific target
             ClientHandler.log(f'Broadcast message from {ClientHandler.client_name} received')
 
@@ -119,3 +134,26 @@ class Menu:
                 return {'print': ["failed to deliver message"]}
             else:
                 return {'print': ['message broadcasted'], 'acknowledge': 0}
+
+        elif 'channel_id' in request:  # records the creation of channels
+            """ 
+            TODO: should add check for valid channel id (make sure its a number) 
+            """
+            ClientHandler.log(f'Channel {request["channel_id"]} created by {ClientHandler.client_name}')
+
+            mod, public, private = RSA()
+            ClientHandler.record_channel(request['channel_id'], ClientHandler.client_name, mod, public, private)
+
+            temp = ClientHandler.channel
+            return {'channel': {'id': temp.id, 'public': (temp.public, temp.mod), 'creator': temp.admin}}
+
+        elif 'join_id' in request:  # join a channel
+            ClientHandler.log(f'{ClientHandler.client_name} attempting to join channel {request["join_id"]}')
+
+            ClientHandler.join_channel(request['join_id'])
+
+            if ClientHandler.channel:
+                temp = ClientHandler.channel
+                return {'channel': {'id': temp.id, 'public': (temp.public, temp.mod), 'creator': temp.admin}}
+            else:
+                return {'print': ['no such channel exist'], 'acknowledge': 0}

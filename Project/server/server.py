@@ -30,6 +30,7 @@ class Server(object):
         self.port = port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # your implementation for this socket here
         self.handlers = []  # initializes client_handlers list
+        self.chats = []
 
     def _bind(self):
         """

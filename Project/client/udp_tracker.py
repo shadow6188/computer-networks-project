@@ -3,13 +3,16 @@ This Python file can be used only for CSC645 projects or labs.
 Students taking this class are allowed to copy and/or modify
 the content of this file to meet their needs for the project.
 """
+import io
+import readline
 import socket
+import sys
 from threading import Thread
 
 
 class Tracker:
 
-    def __init__(self,client, address):
+    def __init__(self, client, address):
         """
         Class constructor
         :param port: the port that will be bind to this UDP tracker
@@ -20,7 +23,8 @@ class Tracker:
         # note that '' is taking your LAN ip address by default. '0.0.0.0' will do the same
         self.udpSocket.bind(address)
 
-        self.helper.log("UDP client running and accepting other clients at udp address {}:{}\n".format(address[0], self.port))
+        self.helper.log(
+            "UDP client running and accepting other clients at udp address {}:{}\n".format(address[0], self.port))
 
     def send(self, message, address):
         """

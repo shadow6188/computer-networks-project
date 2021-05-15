@@ -12,12 +12,11 @@
 # don't modify this imports.
 import socket
 import pickle
-from dataclasses import asdict
 
 from client_helper import ClientHelper
 import argparse
 
-######################################## Client Socket ###############################################################3
+######################################## Client Socket ################################################################
 """
 Client class that provides functionality to create a client socket is provided. Implement all the methods but bind(..)
 """
@@ -49,7 +48,7 @@ class Client(object):
             self.client.connect((server_ip_address, server_port))
             connected = self.receive()
             print(f"Successfully connected to {server_ip_address}/{server_port}")
-            self.client_helper(connected['clientid'], name)
+            self.client_helper(connected['client_id'], name)
 
         except socket.timeout:
             print("Server not found")
@@ -72,7 +71,6 @@ class Client(object):
         """
         data_serialized = pickle.dumps(data)
         self.client.send(data_serialized)
-
 
     def receive(self, max_alloc_buffer=4096):
         """

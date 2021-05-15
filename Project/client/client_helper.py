@@ -1,26 +1,9 @@
+import sys
 import threading
 from threading import Thread
-
 from udp_tracker import Tracker
-
-
-def check_address(address):
-    if len(address.split(":")) == 2:
-        values = address.split(":")
-    else:
-        return False
-
-    first = values[0]
-    second = values[1]
-    # print(f'ip is {first} and port is {second}')
-    if not len(first.split(".")) == 4:
-        return False  # check far ip by checking for 3 .
-    try:
-        second = int(second)  # make sure second part is an int
-    except ValueError:
-        return False
-
-    return first, second
+import chat
+import client_helper_auxiliary as extra
 
 
 class ClientHelper:
@@ -73,7 +56,7 @@ class ClientHelper:
         try:
             while True:
                 response = self.client.receive()
-                if not response:  # first check if
+                if not response:
                     continue
                 if 'print' in response:
                     for line in response['print']:
@@ -81,42 +64,61 @@ class ClientHelper:
                     self.log('\n')
                 if 'input' in response:
                     for key in response['input'].keys():
-                        # thinking of sending type to check input client side
                         request[key] = self.read(response['input'][key])
                 if 'UDP' in response:
                     # print("UDP chosen")
                     if not self.udp:  # if udp socket not setup then it will be
                         """ TODO: need to add check for proper values """
                         ip = self.read("Enter the address to bind your UDP client (e.g 127.0.0.1:6000): ")
-                        address = check_address(ip)  # convert address to str int tuple
-                        while not address:  # check for valid format
-                            self.log(f"{ip} is an invalid address")
-                            ip = self.read("Enter the address to bind your UDP client (e.g 127.0.0.1:6000): ")
-                            address = check_address(ip)
+                        address = extra.ensure_address(self, ip)
                         self.udp = Tracker(self, address)
                         Thread(target=self.udp.listen).start()
 
                     recipient_ip = self.read("Enter the recipient address (e.g 127.0.0.1:6001) : ")
 
-                    send = check_address(recipient_ip)  # convert address to str int tuple
-                    while not send:
-                        self.log(f"{recipient_ip} is an invalid address")
-                        recipient_ip = self.read("Enter the recipient address (e.g 127.0.0.1:6000): ")
-                        send = check_address(recipient_ip)
+                    send = extra.ensure_address(self, recipient_ip)
 
                     message = self.read("Enter the message: ")
                     self.udp.send(message.encode(), send)
 
                     self.log(f"message sent to udp address: {recipient_ip}")
+                if 'channel' in response:
+                    """TODO: create chat"""
+                    data = response['channel']
+                    channel = chat.Chat(self.client, data['id'],
+                                        data['public'], data['creator'])
+
+                    channel.chat_start()
+                    chat_listen = Thread(target=channel.chat_listen)
+
+                    chat_listen.start()
+                    """
+                    The idea here is to continually request input and send that to the server,
+                    meanwhile a separate thread will listen to messages from the server and print them out
+                    when printing out, will get a copy of input buffer & store it. then use either '\r' or 
+                    some ascii escape characters to clear the current line which should be user input.
+                    print out the message, then move down to next line and print input buffer contents
+                    """
+                    while True:
+                        if not chat_listen.is_alive():
+                            break
+                        message = input(">")
+
+                        self.send_request({'chat': message})
 
                 if 'acknowledge' in response:  # check if this is a response to request
-                    self.send_request(self.create_request())  # after finish sending message request menu again
+                    request = self.create_request()  # after finish sending message request menu again
 
                 if 'exit' in response:
+                    print('closing client')
                     break
                 if request.keys():
                     self.send_request(request)
                     request.clear()
+                else:
+                    print("nothing in request")
+                    print(request.keys())
+                    self.send_request(self.create_request())
 
         except Exception as err:
             print("error is ", err)

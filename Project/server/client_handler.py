@@ -11,13 +11,20 @@
 # Running instructions: This program needs the server to run. The server creates an object of this class.
 #
 ########################################################################################################################
-import socket
 import threading
 import pickle
-from collections import defaultdict
 import datetime
 
 from menu import Menu
+
+
+class Channel(object):
+    def __init__(self, channel_id, admin, private, public, mod):
+        self.mod = mod
+        self.public = public
+        self.private = private
+        self.id = channel_id
+        self.admin = admin
 
 
 class ClientHandler:
@@ -26,11 +33,11 @@ class ClientHandler:
     and sends responses back to the client linked to this handler.
     """
 
-    def __init__(self, server_instance, clienthandler, addr):
+    def __init__(self, server_instance, client_handler, addr):
         """
         Class constructor already implemented for you.
         :param server_instance: passed as 'self' when the object of this class is created in the server object
-        :param clientsocket: the accepted client on server side. this handler, by itself, can send and receive data
+        :param client_handler: the accepted client on server side. this handler, by itself, can send and receive data
                              from/to the client that is linked to.
         :param addr: addr[0] = server ip address, addr[1] = client id assigned buy the server
         """
@@ -39,15 +46,15 @@ class ClientHandler:
         self.client_name = None
         self.menu = Menu()
         self.server = server_instance
-        self.handler = clienthandler
+        self.handler = client_handler
         self.messages = {}
         self.print_lock = threading.Lock()  # creates the print lock
         self.send_id(self.client_id)
         self.done = False
+        self.channel = None
 
     def process_requests(self):
         """
-        TODO: process disconnects
         :return: VOID
         """
         try:
@@ -78,15 +85,22 @@ class ClientHandler:
             option = self.menu.option(request['option'])
             response.update(self.menu.request_headers(self, option))
 
-        elif 'menu' in request:  # if no headers then send the menu
+        elif 'menu' in request:  # if menu requested then send the menu
             self.log(f"menu sent to {self.client_name}")
             response.update({'print': self.menu.get()})
             response.update({'input': {'option': "Your option <enter a number>:"}})
 
+        elif 'chat' in request:
+            print('passing message ', request['chat'])
+            for client in self.server.handlers:
+                if client is not self:
+                    if client.channel == self.channel:
+                        client.send(request)
         elif len(request) > 0:
             self.log("other options selected")
             headers = self.menu.response_headers(self, request)
             response.update(headers)
+
         else:
             self.log("something went wrong with the request")
 
@@ -99,11 +113,22 @@ class ClientHandler:
         self.log(f'Client {self.client_id} name set to {self.client_name}')
 
     def get_users(self):  # correctly returning a list with client names with id
-        """ TODO: Make sure disconnected user no longer show up """
         handlers = ["users connected"]
         for handler in self.server.handlers:
             handlers.append(str(handler.client_name) + ':' + str(handler.client_id))
         return handlers
+
+    def record_channel(self, channel_id, admin, public, private, mod):
+        # saving channel existence in server
+        self.channel = Channel(channel_id, admin, public, private, mod)
+        self.server.chats.append(self.channel)
+
+    def join_channel(self, channel_id):
+        print("join channel id is ", channel_id)
+        for chat in self.server.chats:
+            if chat.id == channel_id:
+                self.channel = chat
+                break
 
     def save_message(self, message, recipient):
         # print(recipient)
@@ -112,20 +137,19 @@ class ClientHandler:
         if recipient is None:  # check for valid sender
             return 1
         else:
-            if self.client_name not in recipient.messages:
-                recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
-            arrived = datetime.datetime.now()
-            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
-                                                         (message + f" (private message from {self.client_name})")))
+            self.pass_message(recipient, message, "Private")
             return 0
 
     def broadcast(self, message):
         for recipient in self.server.handlers:
-            if self.client_name not in recipient.messages:
-                recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
-            arrived = datetime.datetime.now()
-            recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
-                                                         (message + f" (broadcast message from {self.client_name})")))
+            self.pass_message(recipient, message, "Broadcast")
+
+    def pass_message(self, recipient, message, message_type):
+        if self.client_name not in recipient.messages:
+            recipient.messages.update({self.client_name: []})  # add messages to recipient list(create if necessary)
+        arrived = datetime.datetime.now()
+        recipient.messages[self.client_name].append((arrived.strftime('%d/%m/%y %I:%M %p'),
+                                                     (message + f" ({message_type} message from {self.client_name})")))
 
     def get_messages(self):
         m = []
@@ -167,12 +191,12 @@ class ClientHandler:
         else:
             return None
 
-    def send_id(self, clientid):
+    def send_id(self, client_id):
         """
         send the client id to the client
         """
-        self.log(f'Client {clientid} connected')
-        client_id = {'clientid': clientid}
+        self.log(f'Client {client_id} connected')
+        client_id = {'client_id': client_id}
         self.send(client_id)
 
     def log(self, message):
