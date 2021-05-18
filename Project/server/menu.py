@@ -8,7 +8,10 @@
 # Usage :           menu = Menu() # creates object
 #
 ########################################################################################
-from Project.shared.PGP import RSA
+from threading import Thread
+
+import bot
+from PGP import RSA
 
 
 class Menu:
@@ -98,7 +101,7 @@ class Menu:
             return {'input': {'join_id': "enter id of channel to join:"}}
         elif option == 8:
             """ todo :  finish this"""
-            return {'acknowledge': 0}
+            return {'input': {'bot': 'Enter the name of your bot:'}}
             #  return bot info
         elif option == 9:
             ClientHandler.log(ClientHandler.client_name + " has disconnected")
@@ -142,18 +145,36 @@ class Menu:
             ClientHandler.log(f'Channel {request["channel_id"]} created by {ClientHandler.client_name}')
 
             mod, public, private = RSA()
-            ClientHandler.record_channel(request['channel_id'], ClientHandler.client_name, mod, public, private)
+
+            ClientHandler.record_channel(request['channel_id'], ClientHandler.client_name, private, public, mod)
 
             temp = ClientHandler.channel
-            return {'channel': {'id': temp.id, 'public': (temp.public, temp.mod), 'creator': temp.admin}}
+            return {'channel': {'id': temp.id, 'public': temp.public, 'mod': temp.mod, 'creator': temp.admin},
+                    'acknowledge': 0}
 
         elif 'join_id' in request:  # join a channel
-            ClientHandler.log(f'{ClientHandler.client_name} attempting to join channel {request["join_id"]}')
+            #  ClientHandler.log(f'{ClientHandler.client_name} attempting to join channel {request["join_id"]}')
 
             ClientHandler.join_channel(request['join_id'])
 
             if ClientHandler.channel:
+                members = ClientHandler.channel_members(request['join_id'])
                 temp = ClientHandler.channel
-                return {'channel': {'id': temp.id, 'public': (temp.public, temp.mod), 'creator': temp.admin}}
+                Thread(target=ClientHandler.channel.bot.welcome_message,
+                       args=(temp.private, temp.mod, ClientHandler.client_name,
+                             ClientHandler.server.handlers)).start()
+
+                return {'channel': {'id': temp.id, 'public': temp.public, 'mod': temp.mod, 'creator': temp.admin,
+                                    'member': members}, 'acknowledge': 0}
             else:
                 return {'print': ['no such channel exist'], 'acknowledge': 0}
+
+        elif 'bot' in request:
+            ClientHandler.create_bot(request['bot'])
+            return {'print': bot.get_permissions(),
+                    'input': {'permissions': 'Enter an integer to enable a set of permissions:'}}
+        elif 'permissions' in request:
+            #  print('permissions picked are ', request['permissions'])
+            ClientHandler.finalize_bot(request['permissions'])
+
+            return {"print": ClientHandler.bot.return_config(), 'acknowledge': 0}

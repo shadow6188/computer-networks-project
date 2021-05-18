@@ -25,3 +25,11 @@ def ensure_address(client_helper, temp):
         temp = client_helper.read("Enter valid address (e.g 127.0.0.1:6000): ")
         address = check_address(temp)
     return address
+
+
+def PublicKey(e, n, data):  # applying public key AKA encryption
+    return (data ** e) % n
+
+
+def encrypt_text(d, n, text):
+    return [PublicKey(d, n, ord(each)) for each in text]

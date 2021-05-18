@@ -11,20 +11,24 @@
 # Running instructions: This program needs the server to run. The server creates an object of this class.
 #
 ########################################################################################################################
+import hashlib
 import threading
 import pickle
 import datetime
+import PGP
+import bot
 
 from menu import Menu
 
 
 class Channel(object):
-    def __init__(self, channel_id, admin, private, public, mod):
+    def __init__(self, channel_id, admin, private, public, mod, bots):
         self.mod = mod
         self.public = public
         self.private = private
         self.id = channel_id
         self.admin = admin
+        self.bot = bots
 
 
 class ClientHandler:
@@ -52,6 +56,7 @@ class ClientHandler:
         self.send_id(self.client_id)
         self.done = False
         self.channel = None
+        self.bot = None
 
     def process_requests(self):
         """
@@ -65,8 +70,8 @@ class ClientHandler:
                 self.process_request(request)
         except ConnectionResetError:
             self.log(f"connection reset by {self.client_name}")
-        except Exception as error:
-            self.log(error)
+        # except Exception as error:
+        #    self.log(error)
 
     def process_request(self, request):
         """
@@ -91,13 +96,30 @@ class ClientHandler:
             response.update({'input': {'option': "Your option <enter a number>:"}})
 
         elif 'chat' in request:
-            print('passing message ', request['chat'])
-            for client in self.server.handlers:
-                if client is not self:
-                    if client.channel == self.channel:
-                        client.send(request)
+            decrypted = PGP.decrypt_text(self.channel.private, self.channel.mod, request['chat'])
+
+            if decrypted[0] == '#':
+                special = decrypted.removeprefix('#')
+                special = special.split(' ', 1)[0]
+
+                if special == 'exit':
+                    if self.client_name == self.channel.admin:
+                        for client in self.server.handlers:
+                            if client.channel == self.channel:  # sends exit signal to all clients in chat
+                                client.send({'exit': None})
+
+                elif special == 'bye':
+                    if self.client_name != self.channel.admin:
+                        self.send({'exit': None})  # sends the exit signal to client if not admin
+
+                else:  # if not bye or exit assume its a private message( look for matching names)
+                    self.send_message_to(decrypted, request['hash'], special)
+            else:
+                self.channel.bot.process_message(self, decrypted)  # check messages here
+                self.send_message_everybody_else(decrypted, request['hash'], self.client_name)
+
         elif len(request) > 0:
-            self.log("other options selected")
+            #  self.log("other options selected")
             headers = self.menu.response_headers(self, request)
             response.update(headers)
 
@@ -107,6 +129,29 @@ class ClientHandler:
         self.send(response)
 
         # delay formulae + ping
+    def channel_drop(self):
+        message = "You have been dropped"
+        self.send({'chat': PGP.encrypt_text(self.channel.private, self.channel.mod, message),
+                   'hash': hashlib.sha1(message.encode()).hexdigest(), 'name': self.channel.bot.name,
+                   'exit': 0})
+        self.channel = None
+
+    def send_message_to(self, message, hash, receiver):
+        """message from this client to receiver"""
+        for client in self.server.handlers:
+            if client.client_name == receiver:
+                sending = {'chat': PGP.encrypt_text(self.channel.private, self.channel.mod, message),
+                           'hash': hash, 'name': self.client_name}
+                client.send(sending)
+
+    def send_message_everybody_else(self, message, hash, name):
+        """message to everybody else on same channel"""
+        for client in self.server.handlers:
+            if client is not self:
+                if client.channel == self.channel:
+                    sending = {'chat': PGP.encrypt_text(self.channel.private, self.channel.mod, message),
+                               'hash': hash, 'name': name}
+                    client.send(sending)
 
     def save_name(self, name):
         self.client_name = name
@@ -118,17 +163,31 @@ class ClientHandler:
             handlers.append(str(handler.client_name) + ':' + str(handler.client_id))
         return handlers
 
-    def record_channel(self, channel_id, admin, public, private, mod):
+    def record_channel(self, channel_id, admin, private, public, mod):
         # saving channel existence in server
-        self.channel = Channel(channel_id, admin, public, private, mod)
+        self.channel = Channel(channel_id, admin, private, public, mod, self.bot)
         self.server.chats.append(self.channel)
 
+    def create_bot(self, name):
+        self.bot = bot.Bot(name, self.server)
+        self.bot.create_token(self.client_id)
+
+    def finalize_bot(self, permissions):
+        self.bot.set_permissions(permissions)
+
     def join_channel(self, channel_id):
-        print("join channel id is ", channel_id)
         for chat in self.server.chats:
             if chat.id == channel_id:
+                print(f"{self.client_name} joining channel ", channel_id)
                 self.channel = chat
                 break
+
+    def channel_members(self, channel_id):
+        members = []
+        for clients in self.server.handlers:
+            if clients.channel.id == channel_id:
+                members.append(clients.client_name)
+        return members
 
     def save_message(self, message, recipient):
         # print(recipient)

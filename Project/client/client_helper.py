@@ -1,4 +1,4 @@
-import sys
+import hashlib
 import threading
 from threading import Thread
 from udp_tracker import Tracker
@@ -58,6 +58,9 @@ class ClientHelper:
                 response = self.client.receive()
                 if not response:
                     continue
+
+
+
                 if 'print' in response:
                     for line in response['print']:
                         self.log(line)
@@ -85,8 +88,12 @@ class ClientHelper:
                 if 'channel' in response:
                     """TODO: create chat"""
                     data = response['channel']
-                    channel = chat.Chat(self.client, data['id'],
-                                        data['public'], data['creator'])
+                    if 'member' in data:
+                        channel = chat.Chat(self.client, data['id'], data['public'], data['mod'], data['creator'],
+                                            self.name, data['member'])
+                    else:
+                        channel = chat.Chat(self.client, data['id'], data['public'], data['mod'], data['creator'],
+                                            self.name)
 
                     channel.chat_start()
                     chat_listen = Thread(target=channel.chat_listen)
@@ -102,13 +109,14 @@ class ClientHelper:
                     while True:
                         if not chat_listen.is_alive():
                             break
-                        message = input(">")
+                        message = input(f"{self.name}>")
 
-                        self.send_request({'chat': message})
-
+                        if len(message) > 0:
+                            hashed = hashlib.sha1(message.encode())
+                            encrypted = extra.encrypt_text(channel.public, channel.mod, message)
+                            self.send_request({'chat': encrypted, 'hash': hashed.hexdigest()})
                 if 'acknowledge' in response:  # check if this is a response to request
                     request = self.create_request()  # after finish sending message request menu again
-
                 if 'exit' in response:
                     print('closing client')
                     break

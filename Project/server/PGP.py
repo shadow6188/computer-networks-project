@@ -1,18 +1,16 @@
 import random
-import hashlib
 
 from Crypto.Util.number import isPrime
 
 
 def gen_prime():
     # returns two  different prime numbers between 1 and 100
-    primes = [i for i in range(1, 20) if isPrime(i)]
+    primes = [i for i in range(11, 30) if isPrime(i)]
     p = random.choice(primes)
     q = random.choice(primes)
     while p == q:
         q = random.choice(primes)
-    # return p, q
-    return 17, 23
+    return p, q
 
 
 def findModInverse(a, m):
@@ -36,9 +34,9 @@ def greatest_common_denominator(first, second):
 
 
 def co_prime_of(number):
-    co_prime = random.randint(1, number)
+    co_prime = 2
     while greatest_common_denominator(number, co_prime) != 1:
-        co_prime = random.randint(1, 100)
+        co_prime += 1
     return co_prime
 
 
@@ -52,49 +50,39 @@ def RSA():  # generates a private key and public key
         print("something went wrong")
         print('got ', pow(e, d, z))
         return -1
-    #print(e, d, z)
     return n, e, d  # d = private key, n, e = public key
 
 
 def PublicKey(e, n, data):  # applying public key AKA encryption
-    return pow(data, e, n)
+    return (data ** e) % n
+
+
+def encrypt_text(d, n, text):
+    return [PublicKey(d, n, ord(each)) for each in text]
 
 
 def PrivateKey(d, n, encrypted):  # applying private key AKA decryption
-    return pow(encrypted, d, n)
+    return (encrypted ** d) % n
 
 
-def PGPClient(data, n_server, e_server):
-    secretKey = random
-    hashMessage = hashlib.sha1(data)
-    encrypted_hash = PublicKey(hashMessage)
-    encrypted_key = PublicKey(n_server, e_server, secretKey)
-    digital_sig = PrivateKey()
-    # send shit here
+def decrypt_text(e, n, cipher):
+    decrypt = [PrivateKey(e, n, each) for each in cipher]
+    return ''.join([chr(each) for each in decrypt])
 
-
-def PGPServer(clientTransmission, ClientPublicKey):
-    all_data = clientTransmission
-    data = ClientPublicKey(all_data['digital_sig'])
-    secret_key = PrivateKey(n, d, all_data['Encrypted_secret_key'])
-    copy = data
-    tmp_hashed_message = hash(copy)
-    if tmp_hashed_message == hash_message:
-        print()
-    else:
-        return
 
 if __name__ == '__main__':
     #  testing out encryption and decryption by trying it out on a string
     nx, ex, dx = RSA()
     print(nx, ex, dx)
-    string = "data"
-    num = [ord(each) for each in string]
-    print(string, " in unicode is ", num)
-    encrypted = [PublicKey(nx, ex, ord(each)) for each in string]
-    print("encrypted data is", encrypted)
-    decrypt = [PrivateKey(nx, dx, each) for each in encrypted]
+    string = "shit"
+    encrypt = encrypt_text(dx, nx, string)
 
-    print('decrypted', decrypt)
+    print(encrypt)
 
-    print(''.join([chr(each) for each in decrypt]))
+    decrypt = decrypt_text(ex, nx, encrypt)
+
+    altx = encrypt_text(ex, nx, decrypt)
+
+    alt = decrypt_text(dx, nx, altx)
+    print(decrypt)
+    print(alt)
