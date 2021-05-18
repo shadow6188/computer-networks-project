@@ -19,9 +19,6 @@ class Tracker:
         # note that '' is taking your LAN ip address by default. '0.0.0.0' will do the same
         self.udpSocket.bind(address)
 
-        self.helper.log(
-            "UDP client running and accepting other clients at udp address {}:{}\n".format(address[0], self.port))
-
     def send(self, message, address):
         """
 
@@ -37,7 +34,11 @@ class Tracker:
         """
         while True:
             data, addr = self.udpSocket.recvfrom(1024)
-            self.helper.log(f'Message: {data.decode()} received from {addr}\n')
+            message = data.decode()
+            if message == 'ping':
+                self.udpSocket.sendto("what".encode(), addr)
+            else:
+                self.helper.log(f'Message: {message} received from {addr}\n')
 
     def listen(self):
         """

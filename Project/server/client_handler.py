@@ -57,6 +57,8 @@ class ClientHandler:
         self.done = False
         self.channel = None
         self.bot = None
+        self.routing = False
+        self.distances = {}
 
     def process_requests(self):
         """
@@ -79,6 +81,22 @@ class ClientHandler:
         :return: VOID
         """
         response = {}
+
+        if self.routing:
+            """best idea i could come up with is telling the client to do routing everytime there is a new
+                client on the server, between request, hopefully its not noticeable
+            """
+            self.log(f"sending a routing request to {self.client_name}")
+
+            users = {}
+
+            for client in self.server.handlers:
+                if client is not self:
+                    print(f'handler {client.client_name} at ip {client.server_ip}')
+                    users.update({client.client_name: client.server_ip})
+            self.send({'ping': users})
+            self.routing = False
+
         if 'name' in request:  # check for first request, which is meant to pass name to server from client
             self.save_name(request['name'])
             client_info = ["Your client info is:",
@@ -129,6 +147,10 @@ class ClientHandler:
         self.send(response)
 
         # delay formulae + ping
+
+    def route_update(self):
+        self.routing = True
+
     def channel_drop(self):
         message = "You have been dropped"
         self.send({'chat': PGP.encrypt_text(self.channel.private, self.channel.mod, message),

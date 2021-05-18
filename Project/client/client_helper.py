@@ -16,6 +16,8 @@ class ClientHelper:
         self.student_id = 918631875
         self.github_username = 'shadow6188'
         self.udp = None
+        self.ping = Tracker(self, ("", 12345))
+        Thread(target=self.ping.listen).start()
         self.lock = threading.Lock()
 
     def create_request(self):
@@ -58,9 +60,11 @@ class ClientHelper:
                 response = self.client.receive()
                 if not response:
                     continue
-
-
-
+                if 'ping' in response:
+                    users = response['ping']
+                    for each in users:
+                        print(each[0], each[1])
+                    continue
                 if 'print' in response:
                     for line in response['print']:
                         self.log(line)
@@ -73,9 +77,10 @@ class ClientHelper:
                     if not self.udp:  # if udp socket not setup then it will be
                         """ TODO: need to add check for proper values """
                         ip = self.read("Enter the address to bind your UDP client (e.g 127.0.0.1:6000): ")
-                        address = extra.ensure_address(self, ip)
-                        self.udp = Tracker(self, address)
+                        addr = extra.ensure_address(self, ip)
+                        self.udp = Tracker(self, addr)
                         Thread(target=self.udp.listen).start()
+                        self.log(f'UDP client running and accepting other clients at udp address {addr[0]}:{addr[1]}')
 
                     recipient_ip = self.read("Enter the recipient address (e.g 127.0.0.1:6001) : ")
 

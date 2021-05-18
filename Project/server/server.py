@@ -73,6 +73,8 @@ class Server(object):
         :addr: the addr list of server parameters created by the server when a client is accepted.
         """
         handler = ClientHandler(self, clienthandler, addr)
+        for clients in self.handlers:
+            clients.route_update()  # tell other clients to reroute because of new client
         self.handlers.append(handler)
         handler.run()
 
