@@ -3,12 +3,8 @@ This Python file can be used only for CSC645 projects or labs.
 Students taking this class are allowed to copy and/or modify
 the content of this file to meet their needs for the project.
 """
-import io
-import readline
-import socket
-import sys
-from threading import Thread
 
+import socket
 
 class Tracker:
 
