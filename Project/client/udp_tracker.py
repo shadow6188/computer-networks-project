@@ -5,6 +5,8 @@ the content of this file to meet their needs for the project.
 """
 
 import socket
+import time
+
 
 class Tracker:
 
@@ -18,6 +20,18 @@ class Tracker:
         self.udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         # note that '' is taking your LAN ip address by default. '0.0.0.0' will do the same
         self.udpSocket.bind(address)
+        self.waiting = False
+
+    def ping(self, ip):
+        self.waiting = True
+        start = time.time()
+        self.udpSocket.sendto('ping'.encode(), (ip, self.port))
+
+        while self.waiting:
+            print('waste time')
+
+        ping = time.time() - start
+        return ping
 
     def send(self, message, address):
         """
@@ -36,7 +50,9 @@ class Tracker:
             data, addr = self.udpSocket.recvfrom(1024)
             message = data.decode()
             if message == 'ping':
-                self.udpSocket.sendto("what".encode(), addr)
+                self.udpSocket.sendto("rping".encode(), addr)
+            elif message == 'rping':
+                self.waiting = False
             else:
                 self.helper.log(f'Message: {message} received from {addr}\n')
 
