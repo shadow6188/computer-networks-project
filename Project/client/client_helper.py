@@ -16,7 +16,6 @@ class ClientHelper:
         self.student_id = 918631875
         self.github_username = 'shadow6188'
         self.udp = None
-        self.ping = Tracker(self, ("", 12345))
         self.lock = threading.Lock()
 
     def create_request(self):
@@ -59,6 +58,7 @@ class ClientHelper:
                 response = self.client.receive()
                 if not response:
                     continue
+                    '''
                 if 'ping' in response:
                     routes = {}
                     users = response['ping']
@@ -67,6 +67,7 @@ class ClientHelper:
                         print(each, users[each], ping)
 
                     continue
+                    '''
                 if 'print' in response:
                     for line in response['print']:
                         self.log(line)

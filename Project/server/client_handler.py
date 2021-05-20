@@ -81,7 +81,7 @@ class ClientHandler:
         :return: VOID
         """
         response = {}
-
+        '''
         if self.routing:
             """best idea i could come up with is telling the client to do routing everytime there is a new
                 client on the server, between request, hopefully its not noticeable
@@ -96,7 +96,7 @@ class ClientHandler:
                     users.update({client.client_name: client.server_ip})
             self.send({'ping': users})
             self.routing = False
-
+        '''
         if 'name' in request:  # check for first request, which is meant to pass name to server from client
             self.save_name(request['name'])
             client_info = ["Your client info is:",

@@ -48,13 +48,7 @@ class Tracker:
         """
         while True:
             data, addr = self.udpSocket.recvfrom(1024)
-            message = data.decode()
-            if message == 'ping':
-                self.udpSocket.sendto("rping".encode(), addr)
-            elif message == 'rping':
-                self.waiting = False
-            else:
-                self.helper.log(f'Message: {message} received from {addr}\n')
+            self.helper.log(f'Message: {data.decode()} received from {addr}\n')
 
     def listen(self):
         """
