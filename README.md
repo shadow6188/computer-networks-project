@@ -22,7 +22,7 @@ first thing I check before grading a lab or the course project.***
 | Lab 3                        |   completed   |
 | Lab 4                        |   completed   |
 | Checkpoint 1                 |   completed   |
-| Course Project               | not completed |
+| Course Project               |   completed   |
 
 
 
