@@ -1,7 +1,7 @@
 Gerardo Ochoa 
 918631875
 
-#Project
+# Project
 Creation of a tcp client and server using socket library.
 The client is able to connect & interact with the server.
 The server provide services to the client through a menu,
@@ -16,7 +16,7 @@ such as sending messages and creating a chat room.
 ![option 7](/Project/pictures/option7+bot%20features.png)
 ![option 8](/Project/pictures/option8.png)
 
-#challenges
+# challenges
 
 I struggled at a couple places mainly option 4, until the professor provided the udp tracker that made it simpler.
 The chat maybe took the longest, because it took me a while to figure out how to erase a line and reprint the contents
